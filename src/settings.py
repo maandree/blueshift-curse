@@ -61,20 +61,43 @@ class Settings:
         @return  :int     The value of the field
         '''
         return self.__settings[key]
+    
+    
+    def __repr__(self):
+        '''
+        Convert to human- and machine-readable representation
+        
+        @return  :str  Human- and machine-readable representation
+        '''
+        return repr(self.settings)
+    
+    
+    @staticmethod
+    def from_repr(representation):
+        '''
+        Convert from human- and machine-readable representation
+        
+        @param   representation:str  The representation
+        @return  :Settings            The setting
+        '''
+        settings = Settings()
+        for setting in eval(representation):
+            settings.add_setting(Setting.from_dict(setting))
+        return settings
 
 
 class Setting:
     '''
     Adjustment setting instance
     
-    @variable  name:str           The name/code of the setting
-    @variable  title:str          The title of the setting
-    @variable  default_value:¿V?  The default value
-    @variable  current_value:¿V?  The current value
-    @variable  value_type:str     The value type
-    @variable  minimum:int|float  The minimum value, length if string type, `None` for unlimited
-    @variable  maximum:int|float  The maximum value, length if string type, `None` for unlimited
-    @variable  epsilon:int|float  The minimum (reasonable) value difference, `None` for none
+    @variable  name:str            The name/code of the setting
+    @variable  title:str           The title of the setting
+    @variable  default_value:¿V??  The default value
+    @variable  current_value:¿V??  The current value
+    @variable  value_type:str      The value type
+    @variable  minimum:int|float   The minimum value, length if string type, `None` for unlimited
+    @variable  maximum:int|float   The maximum value, length if string type, `None` for unlimited
+    @variable  epsilon:int|float   The minimum (reasonable) value difference, `None` for none
     '''
     
     
@@ -98,13 +121,13 @@ class Setting:
         '''
         Constructor
         
-        @param  name:str           The name/code of the setting, whitespace free ASCII only
-        @param  title:str          The title of the setting
-        @param  default_value:¿V?  The default value
-        @param  value_type:str     The value type
-        @param  minimum:int|float  The minimum value, length if string type, `None` for unlimited
-        @param  maximum:int|float  The maximum value, length if string type, `None` for unlimited
-        @param  epsilon:int|float  The minimum (reasonable) value difference, `None` for none
+        @param  name:str            The name/code of the setting, whitespace free ASCII only
+        @param  title:str           The title of the setting
+        @param  default_value:¿V??  The default value
+        @param  value_type:str      The value type
+        @param  minimum:int|float   The minimum value, length if string type, `None` for unlimited
+        @param  maximum:int|float   The maximum value, length if string type, `None` for unlimited
+        @param  epsilon:int|float   The minimum (reasonable) value difference, `None` for none
         '''
         self.name = name
         self.title = title
@@ -114,4 +137,48 @@ class Setting:
         self.minimum = minimum
         self.maximum = maximum
         self.epsilon = epsilon
+    
+    
+    def __repr__(self):
+        '''
+        Convert to human- and machine-readable representation
+        
+        @return  :str  Human- and machine-readable representation
+        '''
+        as_dict = { 'name'          : name
+                  , 'title'         : title
+                  , 'default_value' : default_value
+                  , 'current_value' : current_value
+                  , 'value_type'    : value_type
+                  , 'minimum'       : minimum
+                  , 'maximum'       : maximum
+                  , 'epsilon'       : epsilon
+                  }
+        
+        return repr(as_dict)
+    
+    
+    @staticmethod
+    def from_dict(dictionary):
+        '''
+        Convert from a dictionary
+        
+        @param   dictionary:dict<str, str|int|float?>  The dictionary
+        @return  :Setting                              The setting
+        '''
+        values = 'name, title, default_value, value_type, minimum, maximum, epsilon'
+        setting = Setting(*[dictionary[value] for value in values.split(', ')])
+        setting.current_value = as_dict['current_value']
+        return setting
+    
+    
+    @staticmethod
+    def from_repr(representation):
+        '''
+        Convert from human- and machine-readable representation
+        
+        @param   representation:str  The representation
+        @return  :Setting            The setting
+        '''
+        return from_dict(eval(representation))
 
