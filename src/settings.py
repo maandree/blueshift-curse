@@ -154,7 +154,6 @@ class Setting:
                   , 'maximum'       : maximum
                   , 'epsilon'       : epsilon
                   }
-        
         return repr(as_dict)
     
     
