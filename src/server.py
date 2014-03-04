@@ -16,7 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
-
+import os
 import socket
 import threading
 
@@ -33,18 +33,23 @@ def accept_function():
 def talk_function(socket):
     while True:
         packet = socket.recv(1024)
-        if packet is None:
+        if (packet is None) or (len(packet) == 0):
             break
         print(packet.decode('utf-8', 'replace'))
 
 
+sockfile = '/dev/shm/blueshift-curse'
+if os.path.exists(sockfile):
+    os.unlink(sockfile)
 sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-sock.bind("/dev/shm/blueshift-curse")
+sock.bind(sockfile)
 try:
     thread = threading.Thread(target = accept_function)
     thread.setDaemon(False)
     thread.start()
     thread.join()
+except:
+    pass
 finally:
     sock.close()
 
