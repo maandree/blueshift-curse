@@ -23,14 +23,18 @@ class Settings:
     Adjustment settings collections
     
     @variable  settings:list<Setting>  All settings
+    @variable  script:str?             Script client's should source
     '''
     
-    def __init__(self):
+    def __init__(self, script = None):
         '''
         Constructor
+        
+        @param  script:str?  Script client's should source
         '''
         self.settings = []
         self.__settings = {}
+        self.script = script
     
     
     def add_setting(self, setting):
@@ -69,7 +73,7 @@ class Settings:
         
         @return  :str  Human- and machine-readable representation
         '''
-        return repr(self.settings)
+        return repr((self.script, self.settings))
     
     
     @staticmethod
@@ -80,8 +84,9 @@ class Settings:
         @param   representation:str  The representation
         @return  :Settings            The setting
         '''
-        settings = Settings()
-        for setting in eval(representation):
+        (script, settings_) = eval(representation)
+        settings = Settings(script)
+        for setting in settings_:
             settings.add_setting(Setting.from_dict(setting))
         return settings
 
