@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 import os
+import fcntl
 
 from dsocket import DSocket
 
@@ -30,8 +31,6 @@ def talk_function(socket):
 
 
 sockfile = '/dev/shm/blueshift-curse'
-if os.path.exists(sockfile):
-    os.unlink(sockfile)
 with DSocket(sockfile, True) as sock:
     try:
         sock.listen(talk_function).join()

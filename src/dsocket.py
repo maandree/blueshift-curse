@@ -23,6 +23,8 @@ import threading
 class DSocket:
     '''
     Domain socket
+    
+    @variable  scoket:socket  The socket
     '''
     
     def __init__(self, pathname, server = None):
