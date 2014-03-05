@@ -17,39 +17,25 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 import os
-import socket
-import threading
 
-
-def accept_function():
-    sock.listen(5)
-    while True:
-        (socket, address) = sock.accept()
-        thread = threading.Thread(target = talk_function, args = (socket,))
-        thread.setDaemon(False)
-        thread.start()
+from dsocket import DSocket
 
 
 def talk_function(socket):
     while True:
-        packet = socket.recv(1024)
-        if (packet is None) or (len(packet) == 0):
+        line = socket.read()
+        if line is None:
             break
-        print(packet.decode('utf-8', 'replace'))
+        print(line)
 
 
 sockfile = '/dev/shm/blueshift-curse'
 if os.path.exists(sockfile):
     os.unlink(sockfile)
-sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-sock.bind(sockfile)
-try:
-    thread = threading.Thread(target = accept_function)
-    thread.setDaemon(False)
-    thread.start()
-    thread.join()
-except:
-    pass
-finally:
-    sock.close()
+with DSocket(sockfile, True) as sock:
+    try:
+        sock.listen(talk_function).join()
+    except KeyboardInterrupt:
+        pass
+os.unlink(sockfile)
 

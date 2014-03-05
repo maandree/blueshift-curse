@@ -16,20 +16,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
-
-import socket
-import threading
+from dsocket import DSocket
 
 
-sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-sock.connect("/dev/shm/blueshift-curse")
-
-try:
+with DSocket('/dev/shm/blueshift-curse', False) as sock:
     while True:
-        line = input()
-        sock.send(line.encode('utf-8'))
-except:
-    pass
-finally:
-    sock.close()
+        try:
+            sock.write(input())
+        except EOFError:           break
+        except KeyboardInterrupt:  break
 
