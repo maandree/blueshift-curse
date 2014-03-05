@@ -111,6 +111,11 @@ class Setting:
     Value type: string
     '''
     
+    TYPE_LIST = 'list'
+    '''
+    Value type: string list
+    '''
+    
     TYPE_INTEGER = 'int'
     '''
     Value type: integer
@@ -167,8 +172,8 @@ class Setting:
         '''
         Convert from a dictionary
         
-        @param   dictionary:dict<str, str|int|float?>  The dictionary
-        @return  :Setting                              The setting
+        @param   dictionary:dict<str, str|int|float|¿V??>  The dictionary
+        @return  :Setting                                  The setting
         '''
         values = 'name, title, default_value, value_type, minimum, maximum, epsilon'
         setting = Setting(*[dictionary[value] for value in values.split(', ')])
