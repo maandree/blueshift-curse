@@ -141,14 +141,14 @@ class Setting:
         @param  epsilon:int|float           The minimum (reasonable) value difference, `None` for none
         @param  possible_values:list<¿V?>?  List of possible values, `None` if not applicable
         '''
-        self.name = name
-        self.title = title
-        self.default_value = default_value
-        self.current_value = default_value
-        self.value_type = value_type
-        self.minimum = minimum
-        self.maximum = maximum
-        self.epsilon = epsilon
+        self.name            = name
+        self.title           = title
+        self.default_value   = default_value
+        self.current_value   = default_value
+        self.value_type      = value_type
+        self.minimum         = minimum
+        self.maximum         = maximum
+        self.epsilon         = epsilon
         self.possible_values = possible_values
     
     
