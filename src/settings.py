@@ -95,14 +95,15 @@ class Setting:
     '''
     Adjustment setting instance
     
-    @variable  name:str            The name/code of the setting
-    @variable  title:str           The title of the setting
-    @variable  default_value:¿V??  The default value
-    @variable  current_value:¿V??  The current value
-    @variable  value_type:str      The value type
-    @variable  minimum:int|float   The minimum value, length if string type, `None` for unlimited
-    @variable  maximum:int|float   The maximum value, length if string type, `None` for unlimited
-    @variable  epsilon:int|float   The minimum (reasonable) value difference, `None` for none
+    @variable  name:str                    The name/code of the setting
+    @variable  title:str                   The title of the setting
+    @variable  default_value:¿V??          The default value
+    @variable  current_value:¿V??          The current value
+    @variable  value_type:str              The value type
+    @variable  minimum:int|float           The minimum value, length if string or list type, `None` for none
+    @variable  maximum:int|float           The maximum value, length if string or list type, `None` for none
+    @variable  epsilon:int|float           The minimum (reasonable) value difference, `None` for none
+    @variable  possible_values:list<¿V?>?  List of possible values, `None` if not applicable
     '''
     
     
@@ -127,17 +128,18 @@ class Setting:
     '''
     
     
-    def __init__(self, name, title, default_value, value_type, minimum = None, maximum = None, epsilon = None):
+    def __init__(self, name, title, default_value, value_type, minimum = None, maximum = None, epsilon = None, possible_values = None):
         '''
         Constructor
         
-        @param  name:str            The name/code of the setting, whitespace free ASCII only
-        @param  title:str           The title of the setting
-        @param  default_value:¿V??  The default value
-        @param  value_type:str      The value type
-        @param  minimum:int|float   The minimum value, length if string type, `None` for unlimited
-        @param  maximum:int|float   The maximum value, length if string type, `None` for unlimited
-        @param  epsilon:int|float   The minimum (reasonable) value difference, `None` for none
+        @param  name:str                    The name/code of the setting, whitespace free ASCII only
+        @param  title:str                   The title of the setting
+        @param  default_value:¿V??          The default value
+        @param  value_type:str              The value type
+        @param  minimum:int|float           The minimum value, length if string or list type, `None` for none
+        @param  maximum:int|float           The maximum value, length if string or list type, `None` for none
+        @param  epsilon:int|float           The minimum (reasonable) value difference, `None` for none
+        @param  possible_values:list<¿V?>?  List of possible values, `None` if not applicable
         '''
         self.name = name
         self.title = title
@@ -147,6 +149,7 @@ class Setting:
         self.minimum = minimum
         self.maximum = maximum
         self.epsilon = epsilon
+        self.possible_values = possible_values
     
     
     def __repr__(self):
@@ -155,14 +158,15 @@ class Setting:
         
         @return  :str  Human- and machine-readable representation
         '''
-        as_dict = { 'name'          : name
-                  , 'title'         : title
-                  , 'default_value' : default_value
-                  , 'current_value' : current_value
-                  , 'value_type'    : value_type
-                  , 'minimum'       : minimum
-                  , 'maximum'       : maximum
-                  , 'epsilon'       : epsilon
+        as_dict = { 'name'            : name
+                  , 'title'           : title
+                  , 'default_value'   : default_value
+                  , 'current_value'   : current_value
+                  , 'value_type'      : value_type
+                  , 'minimum'         : minimum
+                  , 'maximum'         : maximum
+                  , 'epsilon'         : epsilon
+                  , 'possible_values' : possible_values
                   }
         return repr(as_dict)
     
@@ -175,7 +179,7 @@ class Setting:
         @param   dictionary:dict<str, str|int|float|¿V??>  The dictionary
         @return  :Setting                                  The setting
         '''
-        values = 'name, title, default_value, value_type, minimum, maximum, epsilon'
+        values = 'name, title, default_value, value_type, minimum, maximum, epsilon, possible_values'
         setting = Setting(*[dictionary[value] for value in values.split(', ')])
         setting.current_value = as_dict['current_value']
         return setting
