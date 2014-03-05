@@ -181,7 +181,7 @@ class Setting:
         '''
         values = 'name, title, default_value, value_type, minimum, maximum, epsilon, possible_values'
         setting = Setting(*[dictionary[value] for value in values.split(', ')])
-        setting.current_value = as_dict['current_value']
+        setting.current_value = dictionary['current_value']
         return setting
     
     
@@ -193,5 +193,5 @@ class Setting:
         @param   representation:str  The representation
         @return  :Setting            The setting
         '''
-        return from_dict(eval(representation))
+        return Setting.from_dict(eval(representation))
 
