@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 import os
+import threading
 
 from dsocket import DSocket
 
@@ -34,6 +35,8 @@ class Server:
         self.sockfile %= (os.environ['USER'], os.environ['DISPLAY'])
         self.socket = DSocket(self.sockfile, True)
         os.chmod(self.sockfile, 0o600)
+        self.clients = []
+        self.semaphore = threading.Semaphore()
     
     
     def close(self):
@@ -41,18 +44,59 @@ class Server:
         Close the socket
         '''
         self.socket.close()
+        if self.semaphore.acquire(blocking = True):
+            for client in self.client:
+                client.close()
+            self.semaphore.release()
         os.unlink(self.sockfile)
-        
-        
+    
+    
     def listen(self, target):
         '''
         Accept all coming connections asynchronously
         
-        @param   target:(DSocket)→void  The function to invoke, with next sockets,
-                                        when new connections are accepted
-        @return  :Thread                The created thread
+        @param   target:(DSocket)?→void  The function to invoke, with next sockets,
+                                         when new connections are accepted
+        @return  :Thread                 The created thread
         '''
-        return self.socket.listen(target)
+        def target_(socket):
+            if self.semaphore.acquire(blocking = True):
+                self.clients.append(socket)
+                self.semaphore.release()
+            if target is not None:
+                    target(socket)
+        return self.socket.listen(target_)
+    
+    
+    def broadcast(self, text):
+        '''
+        Broadcast a message to all clients
+        
+        @param  text:str  The text line to send
+        '''
+        for client in list(self.client):
+            self.send(text, client)
+    
+    
+    def send(self, text, target):
+        '''
+        Send a message to a client
+        
+        @param  text:str         The text line to send
+        @param  target:DSocket?  The client, `None` for all
+        '''
+        if self.target is None:
+            self.broadcast(text)
+        else:
+            try:
+                target.write(text)
+            except:
+                try:
+                    if self.semaphore.acquire(blocking = True):
+                        del self.clients[self.clients.index(target)]
+                        self.semaphore.release()
+                except:
+                    pass
     
     
     def __enter__(self):
