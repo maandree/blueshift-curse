@@ -128,10 +128,10 @@ class Server:
         @param  text:str  The text line to send
         '''
         for client in list(self.client):
-            self.send(text, client)
+            self.write(text, client)
     
     
-    def send(self, text, target):
+    def write(self, text, target):
         '''
         Send a message to a client
         
