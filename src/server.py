@@ -37,6 +37,9 @@ class Server:
         os.chmod(self.sockfile, 0o600)
         self.clients = []
         self.semaphore = threading.Semaphore()
+        self.condition = None
+        self.inqueue = None
+        self.reading = False
     
     
     def close(self):
@@ -44,11 +47,34 @@ class Server:
         Close the socket
         '''
         self.socket.close()
-        if self.semaphore.acquire(blocking = True):
-            for client in self.client:
-                client.close()
-            self.semaphore.release()
+        self.semaphore.acquire():
+        for client in self.client:
+            client.close()
+        self.semaphore.release()
         os.unlink(self.sockfile)
+    
+    
+    def async_read(self, client):
+        '''
+        Used by the class itself to read from clients asynchronously
+        
+        @param  client:DSocket  The client
+        '''
+        def async_read_():
+            while True:
+                line = client.read()
+                if line is None:
+                    break
+                self.condition.acquire()
+                self.inqueue.append((line, client))
+                self.condition.notify()
+                self.condition.release()
+            self.semaphore.acquire()
+            del self.clients[self.clients.index(client)]
+            self.semaphore.release()
+        thread = threading.Thread(target = async_read_)
+        thread.setDaemon(False)
+        thread.start()
     
     
     def listen(self, target):
@@ -60,12 +86,39 @@ class Server:
         @return  :Thread                 The created thread
         '''
         def target_(socket):
-            if self.semaphore.acquire(blocking = True):
-                self.clients.append(socket)
-                self.semaphore.release()
+            self.semaphore.acquire()
+            self.clients.append(socket)
+            if self.reading:
+                self.async_read(socket)
+            self.semaphore.release()
             if target is not None:
-                    target(socket)
+                target(socket)
         return self.socket.listen(target_)
+    
+    
+    def read(self):
+        '''
+        Wait for a message from any client. Once this method
+        has be invoked, you cannot read from the clients
+        individually and must use this method.
+        
+        @return  :(str, DSocket)  The message received and which client send the message
+        '''
+        self.semaphore.acquire()
+        if not self.reading:
+            self.reading = True
+            self.condition = threading.Condition()
+            self.inqueue = []
+            for client in self.clients:
+                self.async_read(client)
+        self.semaphore.release()
+        self.condition.acquire()
+        self.condition.wait()
+        self.semaphore.acquire()
+        rc, self.inqueue[:] = self.inqueue[-1], self.inqueue[:-1]
+        self.semaphore.release()
+        self.condition.release()
+        return rc
     
     
     def broadcast(self, text):
@@ -92,9 +145,9 @@ class Server:
                 target.write(text)
             except:
                 try:
-                    if self.semaphore.acquire(blocking = True):
-                        del self.clients[self.clients.index(target)]
-                        self.semaphore.release()
+                    self.semaphore.acquire()
+                    del self.clients[self.clients.index(target)]
+                    self.semaphore.release()
                 except:
                     pass
     
