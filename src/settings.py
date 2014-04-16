@@ -128,13 +128,14 @@ class Setting:
     '''
     
     
-    def __init__(self, name, title, default_value, value_type, minimum = None, maximum = None, epsilon = None, possible_values = None):
+    def __init__(self, name, title, default_value, current_value, value_type, minimum = None, maximum = None, epsilon = None, possible_values = None):
         '''
         Constructor
         
         @param  name:str                    The name/code of the setting, whitespace free ASCII only
         @param  title:str                   The title of the setting
         @param  default_value:¿V??          The default value
+        @param  current_value:¿V??          The current value
         @param  value_type:str              The value type
         @param  minimum:int|float           The minimum value, length if string or list type, `None` for none
         @param  maximum:int|float           The maximum value, length if string or list type, `None` for none
@@ -144,7 +145,7 @@ class Setting:
         self.name            = name
         self.title           = title
         self.default_value   = default_value
-        self.current_value   = default_value
+        self.current_value   = current_value
         self.value_type      = value_type
         self.minimum         = minimum
         self.maximum         = maximum
