@@ -389,6 +389,21 @@ def terminate_terminal():
     print('\033[?25h\033[?1049l', end = '', flush = True)
 
 
+def read_input():
+    '''
+    Read from the terminal and act upon the input
+    '''
+    inbuf = sys.stdin.buffer
+    while True:
+        try:
+            c = inbuf.read(1)
+        except:
+            break
+        if c == b'q':
+            break
+        # FIXME
+
+
 def run():
     '''
     Run the user interface
@@ -405,15 +420,7 @@ def run():
     
     try:
         initialise_terminal()
-        inbuf = sys.stdin.buffer
-        while True:
-            try:
-                c = inbuf.read(1)
-            except:
-                break
-            if c == b'q':
-                break
-            # FIXME
+        read_input()
     finally:
         terminate_terminal()
 
