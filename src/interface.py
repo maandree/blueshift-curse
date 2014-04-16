@@ -16,7 +16,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
+import os
 import sys
+import signal
 import threading
 
 from settings import Settings
@@ -112,6 +114,11 @@ condition = Condition()
 :Condition  Update condition
 '''
 
+blueshift_pid = None
+'''
+:int  The process ID of the blueshift instance at the server end
+'''
+
 
 def source_script(scriptfile):
     '''
@@ -159,12 +166,15 @@ def updates_listen():
     '''
     Listen for and read updates
     '''
+    global blueshift_pid
     while True:
         message = ipc_client.read()
         if message is None:
             close_interface()
         elif message.startswith('Settings: '):
             update_settings(message[len('Settings: '):])
+        elif message.startswith('PID: '):
+            blueshift_pid = int(message[len('PID: '):])
         else:
             message = message.split(': ')
             update_custom(message[0], ': '.join(message[1:]))
@@ -204,6 +214,59 @@ def update_custom(command, payload):
     @param  payload:str  The payload part of the message
     '''
     pass
+
+
+def kill_server(sig = signal.SIGKILL):
+    '''
+    Send a signal to the server process
+    
+    @param  sig:int  The signal to send
+    '''
+    if blueshift_pid is not None:
+        os.kill(blueshift_pid, sig)
+
+
+def reload_server():
+    '''
+    Request that the server reloads its configuration script
+    '''
+    kill_server(signal.SIGUSR1)
+
+
+def toggle_server():
+    '''
+    Request that the server temporarily removes its adjustments or recovers from such state
+    '''
+    kill_server(signal.SIGUSR2)
+
+
+def terminate_server():
+    '''
+    Request that the server removes its adjustments and stops
+    '''
+    kill_server(signal.SIGTERM)
+
+
+def panic_terminate_server():
+    '''
+    Request that the server removes its adjustments and stops immediately without transitions
+    '''
+    kill_server(signal.SIGTERM)
+    kill_server(signal.SIGTERM)
+
+
+def pause_server():
+    '''
+    Cause the server process to pause until `resume_server` is invoked
+    '''
+    kill_server(signal.SIGTSTP)
+
+
+def resume_server():
+    '''
+    Cause the server process to resume from an invocation of `pause_server`
+    '''
+    kill_server(signal.SIGCONT)
 
 
 def run():
