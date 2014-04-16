@@ -421,15 +421,17 @@ def run():
     listen_size_update()
     
     ipc_client = create_client()
-    
-    updates_thread = daemon_thread(updates_listen)
-    updates_thread.start()
-    
     try:
-        initialise_terminal()
-        read_input()
+        updates_thread = daemon_thread(updates_listen)
+        updates_thread.start()
+        
+        try:
+            initialise_terminal()
+            read_input()
+        finally:
+            terminate_terminal()
     finally:
-        terminate_terminal()
+        ipc_client.close()
 
 
 ## Make dictionary of globals that sources scripts should use
