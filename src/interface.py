@@ -132,6 +132,11 @@ width = 80
 :int  The number of columns in the terminal
 '''
 
+saved_stty = None
+'''
+:list<int>?  Stored terminal settings
+'''
+
 
 def print(text = '', end = '\n', flush = None):
     '''
@@ -176,6 +181,7 @@ def winch_trap(sig, frame):
     @param  frame:None  Will most likely be `None`
     '''
     update_size()
+    pass # FIXME
 
 
 def listen_size_update():
@@ -352,18 +358,30 @@ def resume_server():
     kill_server(signal.SIGCONT)
 
 
-def initialise_terminal(): # FIXME
+def initialise_terminal():
     '''
     Initialise the terminal and set the mode
     '''
-    pass
+    global saved_stty
+    # Initialise the terminal and hide the cursor
+    print('\033[?1049h\033[?25l', end = '', flush = True)
+    # Store the terminal settings
+    saved_stty = termios.tcgetattr(sys.stdout.fileno())
+    # Change the terminal settings: no buffering, no eaching, disable some signals
+    stty = termios.tcgetattr(sys.stdout.fileno())
+    stty[3] &= ~(termios.ICANON | termios.ECHO | termios.ISIG)
+    termios.tcsetattr(sys.stdout.fileno(), termios.TCSAFLUSH, stty)
 
 
-def terminate_terminal(): # FIXME
+def terminate_terminal():
     '''
     Terminate the terminal and restore the mode
     '''
-    pass
+    # Restore terminal settings
+    if saved_stty is not None:
+        termios.tcsetattr(sys.stdout.fileno(), termios.TCSAFLUSH, saved_stty)
+    # Show the cursor and terminate the terminal
+    print('\033[?25h\033[?1049l', end = '', flush = True)
 
 
 def run():
