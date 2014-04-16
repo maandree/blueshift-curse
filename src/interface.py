@@ -67,6 +67,31 @@ def setproctitle(title):
 setproctitle(sys.argv[0])
 
 
+class Condition(threading.Condition):
+    '''
+    Threading condition with `with` support
+    '''
+    
+    def __init__(self, *args, **kwargs):
+        '''
+        Constructor
+        '''
+        threading.Condition.__init__(*args, **kwargs)
+    
+    def __enter__(self):
+        '''
+        Called when `with` enters
+        '''
+        self.acquire()
+        return self
+    
+    def __exit__(self, _type, _value, _trace):
+        '''
+        Called when `with` exits
+        '''
+        self.release()
+
+
 last_loaded_script = None
 '''
 :str?  The last script that has been loaded at the request of the server
@@ -80,6 +105,11 @@ ipc_client = None
 updates_thread = None
 '''
 :Thread  Thread running `updates_listen`
+'''
+
+condition = Condition()
+'''
+:Condition  Update condition
 '''
 
 
@@ -147,7 +177,7 @@ def close_interface(): # FIXME
     pass
 
 
-def update_settings(payload): # FIXME
+def update_settings(payload):
     '''
     A new settings have been sent from the server
     
