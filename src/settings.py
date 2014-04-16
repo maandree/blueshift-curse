@@ -82,7 +82,7 @@ class Settings:
         Convert from human- and machine-readable representation
         
         @param   representation:str  The representation
-        @return  :Settings            The setting
+        @return  :Settings           The setting
         '''
         (script, settings_) = eval(representation)
         settings = Settings(script)
