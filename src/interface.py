@@ -206,6 +206,18 @@ def update_custom(command, payload):
     pass
 
 
+def run():
+    '''
+    Run the user interface
+    '''
+    global ipc_client, updates_thread
+    
+    ipc_client = create_client()
+    
+    updates_thread = daemon_thread(updates_listen)
+    updates_thread.start()
+
+
 ## Make dictionary of globals that sources scripts should use
 __globals, __locals = globals(), dict(locals())
 for key in l:
@@ -261,8 +273,5 @@ if config_file is not None:
     source_script(config_file)
 
 
-ipc_client = create_client()
-
-updates_thread = daemon_thread(updates_listen)
-updates_thread.start()
+run()
 
