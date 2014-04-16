@@ -325,6 +325,20 @@ def resume_server():
     kill_server(signal.SIGCONT)
 
 
+def initialise_terminal(): # FIXME
+    '''
+    Initialise the terminal and set the mode
+    '''
+    pass
+
+
+def terminate_terminal(): # FIXME
+    '''
+    Terminate the terminal and restore the mode
+    '''
+    pass
+
+
 def run():
     '''
     Run the user interface
@@ -338,6 +352,12 @@ def run():
     
     updates_thread = daemon_thread(updates_listen)
     updates_thread.start()
+    
+    try:
+        initialise_terminal()
+        pass # FIXME
+    finally:
+        terminate_terminal()
 
 
 ## Make dictionary of globals that sources scripts should use
