@@ -17,6 +17,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 import sys
+import threading
+
+from settings import Settings
+from client import Client
 
 
 
@@ -63,12 +67,123 @@ def setproctitle(title):
 setproctitle(sys.argv[0])
 
 
-## Load extension and configurations via blueshiftrc
+last_loaded_script = None
+'''
+:str?  The last script that has been loaded at the request of the server
+'''
+
+ipc_client = None
+'''
+:Client  The IPC client socket
+'''
+
+updates_thread = None
+'''
+:Thread  Thread running `updates_listen`
+'''
+
+
+def source_script(scriptfile):
+    '''
+    Load a script and share variables with it
+    
+    @param  scriptfile:str  The script's pathname
+    '''
+    code = None
+    # Read configuration script file
+    with open(scriptfile, 'rb') as script:
+        code = script.read()
+    # Decode configurion script file and add a line break
+    # at the end to ensure that the last line is empty.
+    # If it is not, we will get errors.
+    code = code.decode('utf-8', 'error') + '\n'
+    # Compile the configuration script,
+    code = compile(code, scriptfile, 'exec')
+    # and run it, with it have the same
+    # globals as this module, so that it can
+    # not only use want we have defined, but
+    # also redefine it for us.
+    exec(code, __globals)
+
+
+def create_client():
+    '''
+    Create IPC client connected to the IPC server
+    '''
+    return Client()
+
+
+def daemon_thread(target, **kwargs):
+    '''
+    Create a daemon thread
+    
+    @param   target:(..)→void  The function to run asynchronously
+    @return  :Thread           The thread to start
+    '''
+    thread = threading.Thread(target = target, **kwargs)
+    thread.setDaemon(True)
+    return thread
+
+
+def updates_listen():
+    '''
+    Listen for and read updates
+    '''
+    while True:
+        message = ipc_client.read()
+        if message is None:
+            close_interface()
+        elif message.startswith('Settings: '):
+            update_settings(message[len('Settings: '):])
+        else:
+            message = message.split(': ')
+            update_custom(message[0], ': '.join(message[1:]))
+
+
+def close_interface(): # FIXME
+    '''
+    Connection to the server has been closed
+    '''
+    pass
+
+
+def update_settings(payload): # FIXME
+    '''
+    A new settings have been sent from the server
+    
+    @param  payload:str  The payload part of the message
+    '''
+    global last_loaded_script
+    
+    # Parse payload
+    payload = Settings.from_repr(payload)
+    # Load new script if it has changed
+    if not last_loaded_script == payload.script:
+        last_loaded_script = payload.script
+        source_script(payload.script)
+    # Update settings
+    for setting in payload.settings:
+        pass # FIXME
+
+
+def update_custom(command, payload):
+    '''
+    A non-standard command have been sent from the server
+    
+    @param  command:str  The command name part of the message
+    @param  payload:str  The payload part of the message
+    '''
+    pass
+
+
+## Make dictionary of globals that sources scripts should use
+__globals, __locals = globals(), dict(locals())
+for key in l:
+    __globals[key] = __locals[key]
+
+## Load extension and configurations via blueshift-curserc
 # No configuration script has been selected explicitly,
 # so select one automatically.
-g, l = globals(), dict(locals())
-for key in l:
-    g[key] = l[key]
 if config_file is None:
     # Possible auto-selected configuration scripts,
     # earlier ones have precedence, we can only select one.
@@ -113,19 +228,11 @@ if config_file is None:
 # command line argument is the invoked command.
 conf_opts = [config_file] + conf_opts
 if config_file is not None:
-    code = None
-    # Read configuration script file
-    with open(config_file, 'rb') as script:
-        code = script.read()
-    # Decode configurion script file and add a line break
-    # at the end to ensure that the last line is empty.
-    # If it is not, we will get errors.
-    code = code.decode('utf-8', 'error') + '\n'
-    # Compile the configuration script,
-    code = compile(code, config_file, 'exec')
-    # and run it, with it have the same
-    # globals as this module, so that it can
-    # not only use want we have defined, but
-    # also redefine it for us.
-    exec(code, g)
+    source_script(config_file)
+
+
+ipc_client = create_client()
+
+updates_thread = daemon_thread(updates_listen)
+updates_thread.start()
 
