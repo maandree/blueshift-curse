@@ -18,7 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 import os
 import sys
+import fcntl
+import struct
 import signal
+import termios
 import threading
 
 from settings import Settings
@@ -119,6 +122,41 @@ blueshift_pid = None
 :int?  The process ID of the blueshift instance at the server end
 '''
 
+height = 25
+'''
+:int  The number of lines in the terminal
+'''
+
+width = 80
+'''
+:int  The number of columns in the terminal
+'''
+
+
+def update_size():
+    '''
+    Update the bookkeeping on the terminal's dimension
+    '''
+    global height, width
+    (height, width) = struct.unpack('hh', fcntl.ioctl(sys.stdout.fileno(), termios.TIOCGWINSZ, '1234'))
+
+
+def winch_trap(sig, frame):
+    '''
+    Signal handler for terminal dimension update signal
+    
+    @param  sig:int     The signal
+    @param  frame:None  Will most likely be `None`
+    '''
+    update_size()
+
+
+def listen_size_update():
+    '''
+    Listen for terminal dimension updates
+    '''
+    signal.signal(signal.SIGWINCH, winch_trap)
+
 
 def source_script(scriptfile):
     '''
@@ -146,8 +184,16 @@ def source_script(scriptfile):
 def create_client():
     '''
     Create IPC client connected to the IPC server
+    
+    @return  :Client  The client IPC socket
     '''
-    return Client()
+    try:
+        return Client()
+    except:
+        sys.stderr.buffer.write('Are you sure blueshift is running?\n'.encode('utf-8'))
+        sys.stderr.buffer.flush()
+        sys.exit(1)
+        return None
 
 
 def daemon_thread(target, **kwargs):
@@ -284,6 +330,9 @@ def run():
     Run the user interface
     '''
     global ipc_client, updates_thread
+    
+    update_size()
+    listen_size_update()
     
     ipc_client = create_client()
     
