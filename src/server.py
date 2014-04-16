@@ -48,9 +48,11 @@ class Server:
         '''
         self.socket.close()
         self.semaphore.acquire():
-        for client in self.client:
-            client.close()
-        self.semaphore.release()
+        try:
+            for client in self.client:
+                client.close()
+            finally:
+                self.semaphore.release()
         os.unlink(self.sockfile)
     
     
@@ -66,12 +68,16 @@ class Server:
                 if line is None:
                     break
                 self.condition.acquire()
-                self.inqueue.append((line, client))
-                self.condition.notify()
-                self.condition.release()
+                try:
+                    self.inqueue.append((line, client))
+                    self.condition.notify()
+                finally:
+                    self.condition.release()
             self.semaphore.acquire()
-            del self.clients[self.clients.index(client)]
-            self.semaphore.release()
+            try:
+                del self.clients[self.clients.index(client)]
+            finally:
+                self.semaphore.release()
         thread = threading.Thread(target = async_read_)
         thread.setDaemon(False)
         thread.start()
@@ -87,10 +93,12 @@ class Server:
         '''
         def target_(socket):
             self.semaphore.acquire()
-            self.clients.append(socket)
-            if self.reading:
-                self.async_read(socket)
-            self.semaphore.release()
+            try:
+                self.clients.append(socket)
+                if self.reading:
+                    self.async_read(socket)
+            finally:
+                self.semaphore.release()
             if target is not None:
                 target(socket)
         return self.socket.listen(target_)
@@ -105,19 +113,25 @@ class Server:
         @return  :(str, DSocket)  The message received and which client send the message
         '''
         self.semaphore.acquire()
-        if not self.reading:
-            self.reading = True
-            self.condition = threading.Condition()
-            self.inqueue = []
-            for client in self.clients:
-                self.async_read(client)
-        self.semaphore.release()
+        try:
+            if not self.reading:
+                self.reading = True
+                self.condition = threading.Condition()
+                self.inqueue = []
+                for client in self.clients:
+                    self.async_read(client)
+        finally:
+            self.semaphore.release()
         self.condition.acquire()
-        self.condition.wait()
-        self.semaphore.acquire()
-        rc, self.inqueue[:] = self.inqueue[-1], self.inqueue[:-1]
-        self.semaphore.release()
-        self.condition.release()
+        try:
+            self.condition.wait()
+            self.semaphore.acquire()
+            try:
+                rc, self.inqueue[:] = self.inqueue[-1], self.inqueue[:-1]
+            finally:
+                self.semaphore.release()
+        finally:
+            self.condition.release()
         return rc
     
     
@@ -147,9 +161,10 @@ class Server:
                 try:
                     self.semaphore.acquire()
                     del self.clients[self.clients.index(target)]
-                    self.semaphore.release()
                 except:
                     pass
+                finally:
+                    self.semaphore.release()
     
     
     def __enter__(self):
