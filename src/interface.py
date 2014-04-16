@@ -133,6 +133,33 @@ width = 80
 '''
 
 
+def print(text = '', end = '\n', flush = None):
+    '''
+    Hack to enforce UTF-8 in output (in the future, if you see anypony not using utf-8 in
+    programs by default, report them to Princess Celestia so she can banish them to the moon)
+    
+    @param  text:str     The text to print (empty string is default)
+    @param  end:str      The appendix to the text to print (line breaking is default)
+    @parma  flush:bool?  Whether to flush, `None` for automatic
+    '''
+    msg = str(text) + end
+    sys.stdout.buffer.write(msg.encode('utf-8'))
+    if msg.endswith('\n') if flush is None else flush:
+        sys.stdout.buffer.flush()
+
+def printerr(text = '', end = '\n', flush = None):
+    '''
+    stderr equivalent to print()
+    
+    @param  text:str     The text to print (empty string is default)
+    @param  end:str      The appendix to the text to print (line breaking is default)
+    @parma  flush:bool?  Whether to flush, `None` for automatic
+    '''
+    msg = str(text) + end
+    sys.stderr.buffer.write(msg.encode('utf-8'))
+    if msg.endswith('\n') if flush is None else flush:
+        sys.stderr.buffer.flush()
+
 def update_size():
     '''
     Update the bookkeeping on the terminal's dimension
