@@ -137,6 +137,11 @@ saved_stty = None
 :list<int>?  Stored terminal settings
 '''
 
+redraw = True
+'''
+:bool  Whether to redraw everything
+'''
+
 
 def print(text = '', end = '\n', flush = None):
     '''
@@ -290,13 +295,15 @@ def update_settings(payload):
     # Parse payload
     payload = Settings.from_repr(payload)
     # Load new script if it has changed
-    if not last_loaded_script == payload.script:
+    loaded_script = not last_loaded_script == payload.script
+    if loaded_script:
         last_loaded_script = payload.script
         source_script(payload.script)
     # Update settings
     with condition:
         for setting in payload.settings:
             pass # FIXME
+        redraw = redraw or loaded_script
         condition.notify()
 
 
