@@ -116,7 +116,7 @@ condition = Condition()
 
 blueshift_pid = None
 '''
-:int  The process ID of the blueshift instance at the server end
+:int?  The process ID of the blueshift instance at the server end
 '''
 
 
@@ -174,7 +174,7 @@ def updates_listen():
         elif message.startswith('Settings: '):
             update_settings(message[len('Settings: '):])
         elif message.startswith('PID: '):
-            blueshift_pid = int(message[len('PID: '):])
+            update_pid(int(message[len('PID: '):]))
         else:
             message = message.split(': ')
             update_custom(message[0], ': '.join(message[1:]))
@@ -185,6 +185,16 @@ def close_interface(): # FIXME
     Connection to the server has been closed
     '''
     pass
+
+
+def update_pid(pid):
+    '''
+    The server has reported its process ID
+    
+    @param  pid:int  The server's process ID
+    '''
+    global blueshift_pid
+    blueshift_pid = pid
 
 
 def update_settings(payload):
