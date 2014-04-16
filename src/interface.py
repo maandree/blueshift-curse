@@ -152,6 +152,7 @@ def print(text = '', end = '\n', flush = None):
     if msg.endswith('\n') if flush is None else flush:
         sys.stdout.buffer.flush()
 
+
 def printerr(text = '', end = '\n', flush = None):
     '''
     stderr equivalent to print()
@@ -164,6 +165,7 @@ def printerr(text = '', end = '\n', flush = None):
     sys.stderr.buffer.write(msg.encode('utf-8'))
     if msg.endswith('\n') if flush is None else flush:
         sys.stderr.buffer.flush()
+
 
 def update_size():
     '''
@@ -181,7 +183,8 @@ def winch_trap(sig, frame):
     @param  frame:None  Will most likely be `None`
     '''
     update_size()
-    pass # FIXME
+    with condition:
+        condition.notify()
 
 
 def listen_size_update():
@@ -259,11 +262,11 @@ def updates_listen():
             update_custom(message[0], ': '.join(message[1:]))
 
 
-def close_interface(): # FIXME
+def close_interface():
     '''
     Connection to the server has been closed
     '''
-    pass
+    sys.stdin.close()
 
 
 def update_pid(pid):
@@ -291,8 +294,10 @@ def update_settings(payload):
         last_loaded_script = payload.script
         source_script(payload.script)
     # Update settings
-    for setting in payload.settings:
-        pass # FIXME
+    with condition:
+        for setting in payload.settings:
+            pass # FIXME
+        condition.notify()
 
 
 def update_custom(command, payload):
@@ -400,7 +405,15 @@ def run():
     
     try:
         initialise_terminal()
-        pass # FIXME
+        inbuf = sys.stdin.buffer
+        while True:
+            try:
+                c = inbuf.read(1)
+            except:
+                break
+            if c == b'q':
+                break
+            # FIXME
     finally:
         terminate_terminal()
 
