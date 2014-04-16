@@ -51,8 +51,8 @@ class Server:
         try:
             for client in self.client:
                 client.close()
-            finally:
-                self.semaphore.release()
+        finally:
+            self.semaphore.release()
         os.unlink(self.sockfile)
     
     
