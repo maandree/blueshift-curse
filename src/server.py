@@ -31,8 +31,8 @@ class Server:
         '''
         Constructor
         '''
-        self.sockfile = '/dev/shm/.blueshift-curse-%s-%s'
-        self.sockfile %= (os.environ['USER'], os.environ['DISPLAY'])
+        self.sockfile = '/dev/shm/.blueshift-curse-%s~%s'
+        self.sockfile %= (os.environ['DISPLAY'], os.environ['USER'])
         self.socket = DSocket(self.sockfile, True)
         os.chmod(self.sockfile, 0o600)
         self.clients = []

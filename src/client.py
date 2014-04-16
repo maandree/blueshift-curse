@@ -30,7 +30,7 @@ class Client(DSocket):
         '''
         Constructor
         '''
-        sockfile = '/dev/shm/.blueshift-curse-%s-%s'
-        sockfile %= (os.environ['USER'], os.environ['DISPLAY'])
+        sockfile = '/dev/shm/.blueshift-curse-%s~%s'
+        sockfile %= (os.environ['DISPLAY'], os.environ['USER'])
         DSocket.__init__(self, sockfile, False)
 
