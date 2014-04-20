@@ -16,6 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
+import os
 import socket
 import threading
 
@@ -42,7 +43,11 @@ class DSocket:
             self.socket = pathname
         else:
             self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            (self.socket.bind if server else self.socket.connect)(pathname)
+            if server:
+                os.fchmod(self.socket.fileno(), 0o600)
+                self.socket.connect(pathname)
+            else:
+                self.socket.bind(pathname)
         self.buffer = ''
     
     
